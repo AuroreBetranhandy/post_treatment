@@ -168,7 +168,7 @@ def polarize(filename):
     mean_N2=np.nanmean(N2,axis=1)
     mean_rnue=np.nanmean(r_nue,axis=1)
     
-    mask_minus=np.logical_and(mean_N2>0,np.logical_and(dens[:,0]>1e12,r[:,0]<15))
+    mask_minus=np.logical_and(mean_N2>0,r[:,0]<15)
     
     r_shock[r_shock<0.8]=np.nan
     mean_shock=np.nanmean(r_shock,axis=1)
@@ -182,7 +182,7 @@ def polarize(filename):
         
     
         
-    mask_plus=np.logical_and(mean_N2>0,np.logical_and(r[:,0]>min_val,dens[:,0]>1e12))
+    mask_plus=np.logical_and(mean_N2>0,r[:,0]>min_val)
 
     if len(r[mask_plus])>0:
         max_val=r[mask_plus].min()
@@ -193,17 +193,20 @@ def polarize(filename):
     
 
     shock_conv_max= np.mean(shock_rm)
-    shock_conv_min=r[:,0][mask_gain].min()
+    if len(r[:,0][mask_gain]):
+        shock_conv_min=r[:,0][mask_gain].min()
+    else: 
+        shock_conv_min=max_val
         
     kinetic_PNS=kinetic.copy()
-    kinetic_PNS[N2>0]=np.nan
+    # kinetic_PNS[N2>0]=np.nan
     kinetic_PNS[r>max_val]=np.nan
     kinetic_PNS[r<min_val]=np.nan
     
     
     
     kin_shock=kinetic.copy()
-    kin_shock[N2>0]=np.nan
+    # kin_shock[N2>0]=np.nan
     kin_shock[r<shock_conv_min]=np.nan
     kin_shock[r>shock_conv_max]=np.nan
     
@@ -211,10 +214,10 @@ def polarize(filename):
     tot_mass=mass.copy()
     tot_mass[r>max_val]=np.nan
     tot_mass[r<min_val]=np.nan
-    tot_mass[N2>0]=np.nan
+    # tot_mass[N2>0]=np.nan
 
     mass_shock=mass.copy()
-    mass_shock[N2>0]=np.nan
+    # mass_shock[N2>0]=np.nan
     mass_shock[r<shock_conv_min]=np.nan
     mass_shock[r>shock_conv_max]=np.nan
 
@@ -232,10 +235,13 @@ def polarize(filename):
                 ,cmap='seismic')
     im=ax[1].pcolormesh(theta[:,:],r[:,:],-N2[:,:],norm=SymLogNorm(linthresh=np.nanmax(abs(N2))/1e11,\
                 vmin=-np.nanmax(abs(N2)),vmax=np.nanmax(abs(N2))),cmap='seismic')
-    vs=ax[2].pcolormesh(theta,r,vel_rad,norm=SymLogNorm(linthresh=np.nanmax(vel_rad)*1e-2),cmap='seismic')
+    vs=ax[2].pcolormesh(theta,r,vel_rad,norm=SymLogNorm(linthresh=np.nanmax(abs(vel_rad))*1e-2),cmap='seismic')
 
     ax[1].fill_between(theta[0,:],shock_conv_min,shock_conv_max,facecolor='y',alpha=0.5)
     ax[1].fill_between(theta[0,:],min_val,max_val,facecolor='w',alpha=0.5)
+    ax[0].plot(theta[0,:],shock_rm,'w')#(theta,r,r_shock,cmap='Reds')
+    ax[1].plot(theta[0,:],shock_rm,'w')#(theta,r,r_shock,cmap='Reds')
+    ax[2].plot(theta[0,:],shock_rm,'w')#(theta,r,r_shock,cmap='Reds')
     ax[0].set_rmax(150)
     ax[1].set_rmax(150)
     ax[2].set_rmax(150)
